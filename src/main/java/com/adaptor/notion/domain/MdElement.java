@@ -1,4 +1,4 @@
-package com.adaptor.notion.domin;
+package com.adaptor.notion.domain;
 
 public enum MdElement {
     HEADING1 {
@@ -20,6 +20,18 @@ public enum MdElement {
         }
     },
     PARAGRAPH {
+        @Override
+        public String format(String content) {
+            return content;
+        }
+    },
+    QUOTE {
+        @Override
+        public String format(String content) {
+            return "> " + content;
+        }
+    },
+    NUMBERED_LIST_ITEM {
         @Override
         public String format(String content) {
             return content;

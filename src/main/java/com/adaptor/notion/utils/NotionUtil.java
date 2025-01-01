@@ -1,9 +1,13 @@
 package com.adaptor.notion.utils;
 
-import com.adaptor.notion.domin.MdBlocks;
-import com.adaptor.notion.domin.MdElement;
+import com.adaptor.notion.domain.MdBlocks;
+import com.adaptor.notion.domain.MdElement;
+import com.adaptor.notion.domain.SerialNumberedListBlock;
+
 import notion.api.v1.NotionClient;
 import notion.api.v1.model.blocks.Block;
+import notion.api.v1.model.blocks.BlockType;
+import notion.api.v1.model.blocks.NumberedListItemBlock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +26,7 @@ public class NotionUtil {
      * @param notionClient The NotionClient instance to use for API calls
      * @throws IllegalArgumentException if notionClient is null
      */
-    public NotionUtil(NotionClient notionClient){
+    public NotionUtil(NotionClient notionClient) {
         if (notionClient == null) {
             throw new IllegalArgumentException("NotionClient cannot be null");
         }
@@ -36,7 +40,7 @@ public class NotionUtil {
      * @return List of converted markdown blocks
      * @throws IllegalArgumentException if notionBlocks is null
      */
-    public List<MdBlocks> notionBlocksToMdBlocks(List<Block> notionBlocks){
+    public List<MdBlocks> notionBlocksToMdBlocks(List<Block> notionBlocks) {
         if (notionBlocks == null) {
             throw new IllegalArgumentException("Notion blocks cannot be null");
         }
@@ -66,11 +70,14 @@ public class NotionUtil {
      * @return List of child blocks
      * @throws IllegalArgumentException if blockId is null or empty
      */
-    public List<Block> getNotionBlocks(String blockId){
+    public List<Block> getNotionBlocks(String blockId) {
         if (blockId == null || blockId.trim().isEmpty()) {
             throw new IllegalArgumentException("Block ID cannot be null or empty");
         }
-        return notionClient.retrieveBlockChildren(blockId, null, null).getResults();
+        List<Block> results = notionClient.retrieveBlockChildren(blockId, null, null).getResults();
+
+        modifyNumberedList(results);
+        return results;
     }
 
     /**
@@ -80,7 +87,7 @@ public class NotionUtil {
      * @return Markdown formatted string
      * @throws IllegalArgumentException if block is null
      */
-    public String markdownParser(Block block){
+    public String markdownParser(Block block) {
         if (block == null) {
             throw new IllegalArgumentException("Block cannot be null");
         }
@@ -89,6 +96,12 @@ public class NotionUtil {
             case HeadingTwo -> MdElement.HEADING2.format(getPlainText(block));
             case HeadingThree -> MdElement.HEADING3.format(getPlainText(block));
             case Paragraph -> MdElement.PARAGRAPH.format(getPlainText(block));
+            case Quote -> MdElement.QUOTE.format(getPlainText(block));
+            case NumberedListItem ->
+                    ((SerialNumberedListBlock) block).getSerialNumber() +
+                    ". " +
+                    MdElement.NUMBERED_LIST_ITEM.format(getPlainText(block));
+
             default -> "";
         };
     }
@@ -121,6 +134,19 @@ public class NotionUtil {
                 var richText = block.asParagraph().getParagraph().getRichText();
                 yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
             }
+            case Quote -> {
+                var richText = block.asQuote().getQuote().getRichText();
+                if (richText.isEmpty()) {
+                    yield "";
+                }
+                String plainText = richText.getFirst().getPlainText();
+                String[] lines = plainText.split("\n");
+                yield String.join("\n> ", lines);
+            }
+            case NumberedListItem -> {
+                var richText = block.asNumberedListItem().getNumberedListItem().getRichText();
+                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
+            }
             default -> "";
         };
     }
@@ -148,7 +174,7 @@ public class NotionUtil {
      */
     private void appendBlockContent(MdBlocks block, StringBuilder markdown) {
         markdown.append(block.getContent()).append("\n");
-        
+
         // If block has children, recursively process them
         // if (!block.children().isEmpty()) {
         //     for (MdBlocks child : block.children()) {
@@ -157,6 +183,19 @@ public class NotionUtil {
         // }
 
         markdown.append("\n");
+    }
+
+    private void modifyNumberedList(List<Block> blocks) {
+        int serialNumber = 1;
+        for (int i = 0; i < blocks.size(); i++) {
+            Block block = blocks.get(i);
+            if (block.getType().equals(BlockType.NumberedListItem)) {
+                SerialNumberedListBlock serialBlock = new SerialNumberedListBlock((NumberedListItemBlock) block, serialNumber++);
+                blocks.set(i, serialBlock);
+            } else {
+                serialNumber = 1;
+            }
+        }
     }
 }
 
