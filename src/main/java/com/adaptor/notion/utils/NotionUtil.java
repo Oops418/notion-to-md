@@ -101,6 +101,7 @@ public class NotionUtil {
                     ((SerialNumberedListBlock) block).getSerialNumber() +
                     ". " +
                     MdElement.NUMBERED_LIST_ITEM.format(getPlainText(block));
+            case BulletedListItem ->  MdElement.BULLETED_LIST_ITEM.format(getPlainText(block));
 
             default -> "";
         };
@@ -145,6 +146,10 @@ public class NotionUtil {
             }
             case NumberedListItem -> {
                 var richText = block.asNumberedListItem().getNumberedListItem().getRichText();
+                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
+            }
+            case BulletedListItem -> {
+                var richText = block.asBulletedListItem().getBulletedListItem().getRichText();
                 yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
             }
             default -> "";

@@ -36,6 +36,12 @@ public enum MdElement {
         public String format(String content) {
             return content;
         }
+    },
+    BULLETED_LIST_ITEM {
+        @Override
+        public String format(String content) {
+            return "- " + content;
+        }
     };
     public abstract String format(String content);
 }
