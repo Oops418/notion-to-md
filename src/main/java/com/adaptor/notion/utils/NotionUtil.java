@@ -1,7 +1,7 @@
 package com.adaptor.notion.utils;
 
+import com.adaptor.notion.behavior.EnumBehaviorManager;
 import com.adaptor.notion.domain.MdBlocks;
-import com.adaptor.notion.enums.MdElementEnum;
 import com.adaptor.notion.domain.SerialNumberedListBlock;
 
 import notion.api.v1.NotionClient;
@@ -77,17 +77,13 @@ public class NotionUtil {
             throw new IllegalArgumentException("Block cannot be null");
         }
         return switch (block.getType()) {
-            case HeadingOne -> MdElementEnum.HEADING1.format(getPlainText(block));
-            case HeadingTwo -> MdElementEnum.HEADING2.format(getPlainText(block));
-            case HeadingThree -> MdElementEnum.HEADING3.format(getPlainText(block));
-            case Paragraph -> MdElementEnum.PARAGRAPH.format(getPlainText(block));
-            case Quote -> MdElementEnum.QUOTE.format(getPlainText(block));
-            case NumberedListItem ->
-                    ((SerialNumberedListBlock) block).getSerialNumber() +
-                    ". " +
-                    MdElementEnum.NUMBERED_LIST_ITEM.format(getPlainText(block));
-            case BulletedListItem ->  MdElementEnum.BULLETED_LIST_ITEM.format(getPlainText(block));
-
+            case HeadingOne -> EnumBehaviorManager.executeBehavior(BlockType.HeadingOne, block);
+            case HeadingTwo -> EnumBehaviorManager.executeBehavior(BlockType.HeadingTwo, block);
+            case HeadingThree -> EnumBehaviorManager.executeBehavior(BlockType.HeadingThree, block);
+            case Paragraph -> EnumBehaviorManager.executeBehavior(BlockType.Paragraph, block);
+            case Quote -> EnumBehaviorManager.executeBehavior(BlockType.Quote, block);
+            case NumberedListItem -> EnumBehaviorManager.executeBehavior(BlockType.NumberedListItem, block);
+            case BulletedListItem -> EnumBehaviorManager.executeBehavior(BlockType.BulletedListItem, block);
             default -> "";
         };
     }
