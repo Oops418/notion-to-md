@@ -1,7 +1,7 @@
 package com.adaptor.notion.utils;
 
 import com.adaptor.notion.domain.MdBlocks;
-import com.adaptor.notion.domain.MdElement;
+import com.adaptor.notion.enums.MdElementEnum;
 import com.adaptor.notion.domain.SerialNumberedListBlock;
 
 import notion.api.v1.NotionClient;
@@ -18,21 +18,6 @@ import java.util.List;
  * and generate markdown representation.
  */
 public class NotionUtil {
-    private final NotionClient notionClient;
-
-    /**
-     * Constructs a NotionUtil with the specified NotionClient.
-     *
-     * @param notionClient The NotionClient instance to use for API calls
-     * @throws IllegalArgumentException if notionClient is null
-     */
-    public NotionUtil(NotionClient notionClient) {
-        if (notionClient == null) {
-            throw new IllegalArgumentException("NotionClient cannot be null");
-        }
-        this.notionClient = notionClient;
-    }
-
     /**
      * Converts a list of Notion blocks to markdown blocks.
      *
@@ -40,7 +25,7 @@ public class NotionUtil {
      * @return List of converted markdown blocks
      * @throws IllegalArgumentException if notionBlocks is null
      */
-    public List<MdBlocks> notionBlocksToMdBlocks(List<Block> notionBlocks) {
+    public static List<MdBlocks> notionBlocksToMdBlocks(List<Block> notionBlocks) {
         if (notionBlocks == null) {
             throw new IllegalArgumentException("Notion blocks cannot be null");
         }
@@ -70,7 +55,7 @@ public class NotionUtil {
      * @return List of child blocks
      * @throws IllegalArgumentException if blockId is null or empty
      */
-    public List<Block> getNotionBlocks(String blockId) {
+    public static List<Block> getNotionBlocks(String blockId, NotionClient notionClient) {
         if (blockId == null || blockId.trim().isEmpty()) {
             throw new IllegalArgumentException("Block ID cannot be null or empty");
         }
@@ -87,21 +72,21 @@ public class NotionUtil {
      * @return Markdown formatted string
      * @throws IllegalArgumentException if block is null
      */
-    public String markdownParser(Block block) {
+    public static String markdownParser(Block block) {
         if (block == null) {
             throw new IllegalArgumentException("Block cannot be null");
         }
         return switch (block.getType()) {
-            case HeadingOne -> MdElement.HEADING1.format(getPlainText(block));
-            case HeadingTwo -> MdElement.HEADING2.format(getPlainText(block));
-            case HeadingThree -> MdElement.HEADING3.format(getPlainText(block));
-            case Paragraph -> MdElement.PARAGRAPH.format(getPlainText(block));
-            case Quote -> MdElement.QUOTE.format(getPlainText(block));
+            case HeadingOne -> MdElementEnum.HEADING1.format(getPlainText(block));
+            case HeadingTwo -> MdElementEnum.HEADING2.format(getPlainText(block));
+            case HeadingThree -> MdElementEnum.HEADING3.format(getPlainText(block));
+            case Paragraph -> MdElementEnum.PARAGRAPH.format(getPlainText(block));
+            case Quote -> MdElementEnum.QUOTE.format(getPlainText(block));
             case NumberedListItem ->
                     ((SerialNumberedListBlock) block).getSerialNumber() +
                     ". " +
-                    MdElement.NUMBERED_LIST_ITEM.format(getPlainText(block));
-            case BulletedListItem ->  MdElement.BULLETED_LIST_ITEM.format(getPlainText(block));
+                    MdElementEnum.NUMBERED_LIST_ITEM.format(getPlainText(block));
+            case BulletedListItem ->  MdElementEnum.BULLETED_LIST_ITEM.format(getPlainText(block));
 
             default -> "";
         };
@@ -114,7 +99,7 @@ public class NotionUtil {
      * @return Plain text content of the block
      * @throws IllegalArgumentException if block is null
      */
-    public String getPlainText(Block block) {
+    public static String getPlainText(Block block) {
         if (block == null) {
             throw new IllegalArgumentException("Block cannot be null");
         }
@@ -163,7 +148,7 @@ public class NotionUtil {
      * @return Markdown formatted string
      * @throws IllegalArgumentException if mdBlocks is null
      */
-    public String generateMarkdown(List<MdBlocks> mdBlocks) {
+    public static String generateMarkdown(List<MdBlocks> mdBlocks) {
         StringBuilder markdown = new StringBuilder();
         for (MdBlocks block : mdBlocks) {
             appendBlockContent(block, markdown);
@@ -177,7 +162,7 @@ public class NotionUtil {
      * @param block    The markdown block to append
      * @param markdown The StringBuilder to append to
      */
-    private void appendBlockContent(MdBlocks block, StringBuilder markdown) {
+    private static void appendBlockContent(MdBlocks block, StringBuilder markdown) {
         markdown.append(block.getContent()).append("\n");
 
         // If block has children, recursively process them
@@ -190,7 +175,7 @@ public class NotionUtil {
         markdown.append("\n");
     }
 
-    private void modifyNumberedList(List<Block> blocks) {
+    private static void modifyNumberedList(List<Block> blocks) {
         int serialNumber = 1;
         for (int i = 0; i < blocks.size(); i++) {
             Block block = blocks.get(i);
