@@ -1,9 +1,10 @@
 package com.adaptor.notion;
 
-import com.adaptor.notion.domin.MdBlocks;
+import com.adaptor.notion.domain.MdBlocks;
 import com.adaptor.notion.utils.NotionClientWrapper;
 import com.adaptor.notion.utils.NotionLoggerWrapper;
 import com.adaptor.notion.utils.NotionUtil;
+import notion.api.v1.model.blocks.Block;
 
 import java.io.Closeable;
 import java.util.List;
@@ -13,8 +14,7 @@ import java.util.List;
  */
 public class MarkdownConverter implements Closeable {
     private static volatile MarkdownConverter instance;
-    private final NotionUtil notionUtil;
-    private final NotionClientWrapper wrapper;
+    private final NotionClientWrapper clientWrapper;
 
     /**
      * Creates a new MarkdownConverter
@@ -25,11 +25,10 @@ public class MarkdownConverter implements Closeable {
         if (notionApiSecret == null || notionApiSecret.trim().isEmpty()) {
             throw new IllegalArgumentException("API secret cannot be null or empty");
         }
-        this.wrapper = NotionClientWrapper.builder()
+        this.clientWrapper = NotionClientWrapper.builder()
                 .token(notionApiSecret)
                 .logger(new NotionLoggerWrapper())
                 .build();
-        this.notionUtil = new NotionUtil(wrapper.getClient());
     }
 
     /**
@@ -58,7 +57,9 @@ public class MarkdownConverter implements Closeable {
         if (pageId == null || pageId.trim().isEmpty()) {
             throw new IllegalArgumentException("Page ID cannot be null or empty");
         }
-        return notionUtil.notionBlocksToMdBlocks(notionUtil.getNotionBlocks(pageId));
+
+        List<Block> notionBlocks = NotionUtil.getNotionBlocks(pageId, clientWrapper.getClient());
+        return NotionUtil.notionBlocksToMdBlocks(notionBlocks);
     }
 
     /**
@@ -71,11 +72,12 @@ public class MarkdownConverter implements Closeable {
         if (mdBlocks == null) {
             throw new IllegalArgumentException("MdBlocks cannot be null");
         }
-        return notionUtil.generateMarkdown(mdBlocks);
+
+        return NotionUtil.generateMarkdown(mdBlocks);
     }
 
     @Override
     public void close() {
-        wrapper.close();
+        clientWrapper.close();
     }
 }
