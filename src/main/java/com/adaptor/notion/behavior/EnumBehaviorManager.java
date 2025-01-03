@@ -4,8 +4,11 @@ import com.adaptor.notion.domain.SerialNumberedListBlock;
 import com.adaptor.notion.utils.NotionUtil;
 import notion.api.v1.model.blocks.Block;
 import notion.api.v1.model.blocks.BlockType;
+import notion.api.v1.model.pages.PageProperty;
+import notion.api.v1.model.pages.PageProperty.RichText;
 
 import java.util.EnumMap;
+import java.util.List;
 
 public class EnumBehaviorManager {
     private static final EnumMap<BlockType, BehaviorStrategy> behaviorMap = new EnumMap<>(BlockType.class);
@@ -18,6 +21,7 @@ public class EnumBehaviorManager {
         behaviorMap.put(BlockType.Quote, new QuoteBehavior());
         behaviorMap.put(BlockType.BulletedListItem, new BulletedListBehavior());
         behaviorMap.put(BlockType.NumberedListItem, new NumberedListBehavior());
+        behaviorMap.put(BlockType.Code, new CodeBehavior());
     }
 
     public static String executeBehavior(BlockType type, Block block) {
@@ -36,51 +40,69 @@ public class EnumBehaviorManager {
     public static class ParagraphBehavior implements BehaviorStrategy {
         @Override
         public String format(Block block) {
-            return NotionUtil.getPlainText(block);
+            List<RichText> richTexts = block.asParagraph().getParagraph().getRichText();
+            return NotionUtil.richTextParser(richTexts);
         }
     }
 
     public static class Heading1Behavior implements BehaviorStrategy {
         @Override
         public String format(Block block) {
-            return "# " + NotionUtil.getPlainText(block);
+            List<RichText> richTexts = block.asHeadingOne().getHeading1().getRichText();
+            return "# " + NotionUtil.richTextParser(richTexts);
         }
     }
 
     public static class Heading2Behavior implements BehaviorStrategy {
         @Override
         public String format(Block block) {
-            return "## " + NotionUtil.getPlainText(block);
+            List<RichText> richTexts = block.asHeadingTwo().getHeading2().getRichText();
+            return "## " + NotionUtil.richTextParser(richTexts);
         }
     }
 
     public static class Heading3Behavior implements BehaviorStrategy {
         @Override
         public String format(Block block) {
-            return "### " + NotionUtil.getPlainText(block);
+            List<RichText> richTexts = block.asHeadingThree().getHeading3().getRichText();
+            return "### " + NotionUtil.richTextParser(richTexts);
         }
     }
 
     public static class QuoteBehavior implements BehaviorStrategy {
         @Override
         public String format(Block block) {
-            return "> " + NotionUtil.getPlainText(block);
+            List<RichText> richTexts = block.asQuote().getQuote().getRichText();
+            return "> " + NotionUtil.richTextParser(richTexts);
         }
     }
 
     public static class NumberedListBehavior implements BehaviorStrategy {
         @Override
         public String format(Block block) {
+            List<RichText> richTexts = block.asNumberedListItem().getNumberedListItem().getRichText();
             return ((SerialNumberedListBlock) block).getSerialNumber()
                     + ". "
-                    + NotionUtil.getPlainText(block);
+                    + NotionUtil.richTextParser(richTexts);
+        }
+    }
+
+    public static class CodeBehavior implements BehaviorStrategy {
+        @Override
+        public String format(Block block) {
+            List<RichText> richTexts = block.asCode().getCode().getRichText();
+            return "```"
+                    + NotionUtil.getCodeLanguage(block) + "\n"
+                    + NotionUtil.richTextParser(richTexts) + "\n"
+                    + "```";
         }
     }
 
     public static class BulletedListBehavior implements BehaviorStrategy {
         @Override
         public String format(Block block) {
-            return "- " + NotionUtil.getPlainText(block);
+            List<RichText> richTexts = block.asBulletedListItem().getBulletedListItem().getRichText();
+            return "- " + NotionUtil.richTextParser(richTexts);
         }
     }
 }

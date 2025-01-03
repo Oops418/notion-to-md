@@ -4,10 +4,13 @@ import com.adaptor.notion.behavior.EnumBehaviorManager;
 import com.adaptor.notion.domain.MdBlocks;
 import com.adaptor.notion.domain.SerialNumberedListBlock;
 
+import lombok.extern.slf4j.Slf4j;
 import notion.api.v1.NotionClient;
 import notion.api.v1.model.blocks.Block;
 import notion.api.v1.model.blocks.BlockType;
 import notion.api.v1.model.blocks.NumberedListItemBlock;
+import notion.api.v1.model.pages.PageProperty;
+import notion.api.v1.model.pages.PageProperty.RichText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.List;
  * Provides functionality to parse Notion blocks, extract text content,
  * and generate markdown representation.
  */
+@Slf4j
 public class NotionUtil {
     /**
      * Converts a list of Notion blocks to markdown blocks.
@@ -84,57 +88,47 @@ public class NotionUtil {
             case Quote -> EnumBehaviorManager.executeBehavior(BlockType.Quote, block);
             case NumberedListItem -> EnumBehaviorManager.executeBehavior(BlockType.NumberedListItem, block);
             case BulletedListItem -> EnumBehaviorManager.executeBehavior(BlockType.BulletedListItem, block);
-            default -> "";
+            case Code -> EnumBehaviorManager.executeBehavior(BlockType.Code, block);
+
+            default -> "Unsupported block type: " + block.getType();
         };
     }
 
-    /**
-     * Extracts plain text content from a Notion block.
-     *
-     * @param block Notion block to extract text from
-     * @return Plain text content of the block
-     * @throws IllegalArgumentException if block is null
-     */
-    public static String getPlainText(Block block) {
-        if (block == null) {
-            throw new IllegalArgumentException("Block cannot be null");
+    public static String richTextParser(List<RichText> richTexts) {
+        if (richTexts == null) {
+            log.warn("Rich text list is null");
+            return "";
         }
-        return switch (block.getType()) {
-            case HeadingOne -> {
-                var richText = block.asHeadingOne().getHeading1().getRichText();
-                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
+        StringBuilder result = new StringBuilder();
+        for (RichText richText : richTexts) {
+            if (richText == null) {
+                log.warn("Rich text is null");
+                continue;
             }
-            case HeadingTwo -> {
-                var richText = block.asHeadingTwo().getHeading2().getRichText();
-                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
+            StringBuilder text = new StringBuilder(richText.getPlainText());
+            if (Boolean.TRUE.equals(richText.getAnnotations().getBold())) {
+                text.insert(0, "**")
+                        .insert(text.length(), "**");
             }
-            case HeadingThree -> {
-                var richText = block.asHeadingThree().getHeading3().getRichText();
-                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
+            if (Boolean.TRUE.equals(richText.getAnnotations().getItalic())) {
+                text.insert(0, "*")
+                        .insert(text.length(), "*");
             }
-            case Paragraph -> {
-                var richText = block.asParagraph().getParagraph().getRichText();
-                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
+            if (Boolean.TRUE.equals(richText.getAnnotations().getStrikethrough())) {
+                text.insert(0, "~~")
+                        .insert(text.length(), "~~");
             }
-            case Quote -> {
-                var richText = block.asQuote().getQuote().getRichText();
-                if (richText.isEmpty()) {
-                    yield "";
-                }
-                String plainText = richText.getFirst().getPlainText();
-                String[] lines = plainText.split("\n");
-                yield String.join("\n> ", lines);
+            if (Boolean.TRUE.equals(richText.getAnnotations().getCode())) {
+                text.insert(0, "`")
+                        .insert(text.length(), "`");
             }
-            case NumberedListItem -> {
-                var richText = block.asNumberedListItem().getNumberedListItem().getRichText();
-                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
+            if (richText.getText().getLink() != null) {
+                text.insert(0, "[").
+                        insert(text.length(), "](" + richText.getText().getLink().getUrl() + ")");
             }
-            case BulletedListItem -> {
-                var richText = block.asBulletedListItem().getBulletedListItem().getRichText();
-                yield richText.isEmpty() ? "" : richText.getFirst().getPlainText();
-            }
-            default -> "";
-        };
+            result.append(text);
+        }
+        return result.toString();
     }
 
     /**
@@ -171,7 +165,7 @@ public class NotionUtil {
         markdown.append("\n");
     }
 
-    private static void modifyNumberedList(List<Block> blocks) {
+    public static void modifyNumberedList(List<Block> blocks) {
         int serialNumber = 1;
         for (int i = 0; i < blocks.size(); i++) {
             Block block = blocks.get(i);
@@ -183,5 +177,13 @@ public class NotionUtil {
             }
         }
     }
+
+    public static String getCodeLanguage(Block block) {
+        if (block.getType().equals(BlockType.Code)) {
+            return block.asCode().getCode().getLanguage();
+        }
+        return null;
+    }
+
 }
 
