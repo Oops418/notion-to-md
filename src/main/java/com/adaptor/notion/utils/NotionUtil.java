@@ -9,7 +9,6 @@ import notion.api.v1.NotionClient;
 import notion.api.v1.model.blocks.Block;
 import notion.api.v1.model.blocks.BlockType;
 import notion.api.v1.model.blocks.NumberedListItemBlock;
-import notion.api.v1.model.pages.PageProperty;
 import notion.api.v1.model.pages.PageProperty.RichText;
 
 import java.util.ArrayList;
@@ -41,11 +40,6 @@ public class NotionUtil {
             String type = block.getType().toString();
             String content = markdownParser(block);
             List<MdBlocks> children = new ArrayList<>();
-
-            // if (Boolean.TRUE.equals(block.getHasChildren())){
-            //     List<Block> children = getNotionBlocks(block.getId());
-            // }
-
             mdBlocks.add(new MdBlocks(id, type, content, children));
         });
 
@@ -89,8 +83,13 @@ public class NotionUtil {
             case NumberedListItem -> EnumBehaviorManager.executeBehavior(BlockType.NumberedListItem, block);
             case BulletedListItem -> EnumBehaviorManager.executeBehavior(BlockType.BulletedListItem, block);
             case Code -> EnumBehaviorManager.executeBehavior(BlockType.Code, block);
+            case Bookmark -> EnumBehaviorManager.executeBehavior(BlockType.Bookmark, block);
+            case Divider -> EnumBehaviorManager.executeBehavior(BlockType.Divider, block);
 
-            default -> "Unsupported block type: " + block.getType();
+            default -> {
+                log.warn("Unsupported block type: {}, block ID: {}", block.getType(), block.getId());
+                yield "";
+            }
         };
     }
 
@@ -141,28 +140,10 @@ public class NotionUtil {
     public static String generateMarkdown(List<MdBlocks> mdBlocks) {
         StringBuilder markdown = new StringBuilder();
         for (MdBlocks block : mdBlocks) {
-            appendBlockContent(block, markdown);
+            markdown.append(block.getContent()).append("\n");
+            markdown.append("\n");
         }
         return markdown.toString();
-    }
-
-    /**
-     * Appends the content of a markdown block to a StringBuilder.
-     *
-     * @param block    The markdown block to append
-     * @param markdown The StringBuilder to append to
-     */
-    private static void appendBlockContent(MdBlocks block, StringBuilder markdown) {
-        markdown.append(block.getContent()).append("\n");
-
-        // If block has children, recursively process them
-        // if (!block.children().isEmpty()) {
-        //     for (MdBlocks child : block.children()) {
-        //         appendBlockContent(child, markdown);
-        //     }
-        // }
-
-        markdown.append("\n");
     }
 
     public static void modifyNumberedList(List<Block> blocks) {

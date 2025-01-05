@@ -22,6 +22,9 @@ public class EnumBehaviorManager {
         behaviorMap.put(BlockType.BulletedListItem, new BulletedListBehavior());
         behaviorMap.put(BlockType.NumberedListItem, new NumberedListBehavior());
         behaviorMap.put(BlockType.Code, new CodeBehavior());
+        behaviorMap.put(BlockType.Bookmark, new BookmarkBehavior());
+        behaviorMap.put(BlockType.Divider, new DividerBehavior());
+
     }
 
     public static String executeBehavior(BlockType type, Block block) {
@@ -103,6 +106,22 @@ public class EnumBehaviorManager {
         public String format(Block block) {
             List<RichText> richTexts = block.asBulletedListItem().getBulletedListItem().getRichText();
             return "- " + NotionUtil.richTextParser(richTexts);
+        }
+    }
+
+    public static class BookmarkBehavior implements BehaviorStrategy {
+        @Override
+        public String format(Block block) {
+            return "[Bookmark]("
+                    + block.asBookmark().getBookmark().getUrl()
+                    + ")";
+        }
+    }
+
+    public static class DividerBehavior implements BehaviorStrategy {
+        @Override
+        public String format(Block block) {
+            return "---";
         }
     }
 }
