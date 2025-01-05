@@ -1,4 +1,4 @@
-package com.adaptor.notion.utils;
+package adaptor.notion.utils;
 
 import notion.api.v1.NotionClient;
 import notion.api.v1.http.NotionHttpClient;

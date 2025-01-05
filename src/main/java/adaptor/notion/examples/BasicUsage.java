@@ -1,7 +1,7 @@
-package com.adaptor.notion.examples;
+package adaptor.notion.examples;
 
-import com.adaptor.notion.MarkdownConverter;
-import com.adaptor.notion.domin.MdBlocks;
+import adaptor.notion.MarkdownConverter;
+import adaptor.notion.domain.MdBlocks;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,12 +23,12 @@ public class BasicUsage {
         }
     }
 
-        private static Properties loadProperties() throws IOException {
+    private static Properties loadProperties() throws IOException {
         Properties properties = new Properties();
         try (InputStream inputStream = BasicUsage.class.getClassLoader()
-                .getResourceAsStream("config.properties")) {
+                .getResourceAsStream("local.properties")) {
             if (inputStream == null) {
-                throw new IllegalStateException("config.properties not found");
+                throw new IllegalStateException("local.properties not found");
             }
             properties.load(inputStream);
             return properties;

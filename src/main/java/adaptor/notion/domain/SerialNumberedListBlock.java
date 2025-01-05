@@ -1,4 +1,4 @@
-package com.adaptor.notion.domain;
+package adaptor.notion.domain;
 
 import lombok.Getter;
 import notion.api.v1.model.blocks.NumberedListItemBlock;

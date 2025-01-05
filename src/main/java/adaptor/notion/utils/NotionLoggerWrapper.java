@@ -1,4 +1,4 @@
-package com.adaptor.notion.utils;
+package adaptor.notion.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import notion.api.v1.logging.NotionLogger;

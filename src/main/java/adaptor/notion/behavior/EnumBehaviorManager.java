@@ -1,10 +1,9 @@
-package com.adaptor.notion.behavior;
+package adaptor.notion.behavior;
 
-import com.adaptor.notion.domain.SerialNumberedListBlock;
-import com.adaptor.notion.utils.NotionUtil;
+import adaptor.notion.domain.SerialNumberedListBlock;
+import adaptor.notion.utils.NotionUtil;
 import notion.api.v1.model.blocks.Block;
 import notion.api.v1.model.blocks.BlockType;
-import notion.api.v1.model.pages.PageProperty;
 import notion.api.v1.model.pages.PageProperty.RichText;
 
 import java.util.EnumMap;

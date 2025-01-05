@@ -1,4 +1,4 @@
-package com.adaptor.notion.domin;
+package adaptor.notion.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
