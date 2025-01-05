@@ -24,6 +24,7 @@ public class EnumBehaviorManager {
         behaviorMap.put(BlockType.Code, new CodeBehavior());
         behaviorMap.put(BlockType.Bookmark, new BookmarkBehavior());
         behaviorMap.put(BlockType.Divider, new DividerBehavior());
+        behaviorMap.put(BlockType.Image, new ImageBehavior());
 
     }
 
@@ -122,6 +123,15 @@ public class EnumBehaviorManager {
         @Override
         public String format(Block block) {
             return "---";
+        }
+    }
+
+    public static class ImageBehavior implements BehaviorStrategy {
+        @Override
+        public String format(Block block) {
+            return "![Image]("
+                    + block.asImage().getImage().getFile().getUrl()
+                    + ")";
         }
     }
 }

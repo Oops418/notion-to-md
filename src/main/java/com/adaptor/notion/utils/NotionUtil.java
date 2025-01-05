@@ -9,10 +9,13 @@ import notion.api.v1.NotionClient;
 import notion.api.v1.model.blocks.Block;
 import notion.api.v1.model.blocks.BlockType;
 import notion.api.v1.model.blocks.NumberedListItemBlock;
+import notion.api.v1.model.pages.Page;
+import notion.api.v1.model.pages.PageProperty;
 import notion.api.v1.model.pages.PageProperty.RichText;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility class for converting Notion blocks to Markdown format.
@@ -28,19 +31,21 @@ public class NotionUtil {
      * @return List of converted markdown blocks
      * @throws IllegalArgumentException if notionBlocks is null
      */
-    public static List<MdBlocks> notionBlocksToMdBlocks(List<Block> notionBlocks) {
+    public static List<MdBlocks> notionBlocksToMdBlocks(List<Block> notionBlocks, Map<String, PageProperty> pageInfo) {
         if (notionBlocks == null) {
+            log.error("Notion blocks cannot be null");
             throw new IllegalArgumentException("Notion blocks cannot be null");
         }
-
         List<MdBlocks> mdBlocks = new ArrayList<>();
-
+        mdBlocks.add(new MdBlocks("0", "pageTitle", "# " + richTextParser(pageInfo.get("title").getTitle()), new ArrayList<>()));
         notionBlocks.forEach(block -> {
             String id = block.getId();
             String type = block.getType().toString();
             String content = markdownParser(block);
             List<MdBlocks> children = new ArrayList<>();
-            mdBlocks.add(new MdBlocks(id, type, content, children));
+            if (content != null && !content.isEmpty()) {
+                mdBlocks.add(new MdBlocks(id, type, content, children));
+            }
         });
 
         return mdBlocks;
@@ -61,6 +66,15 @@ public class NotionUtil {
 
         modifyNumberedList(results);
         return results;
+    }
+
+    public static Map<String, PageProperty> getNotionPageInfo(String pageId, NotionClient notionClient) {
+        if (pageId == null || pageId.trim().isEmpty()) {
+            log.error("Page ID cannot be null or empty");
+            throw new IllegalArgumentException("Page ID cannot be null or empty");
+        }
+        Page page = notionClient.retrievePage(pageId, null);
+        return page.getProperties();
     }
 
     /**
@@ -85,6 +99,7 @@ public class NotionUtil {
             case Code -> EnumBehaviorManager.executeBehavior(BlockType.Code, block);
             case Bookmark -> EnumBehaviorManager.executeBehavior(BlockType.Bookmark, block);
             case Divider -> EnumBehaviorManager.executeBehavior(BlockType.Divider, block);
+            case Image -> EnumBehaviorManager.executeBehavior(BlockType.Image, block);
 
             default -> {
                 log.warn("Unsupported block type: {}, block ID: {}", block.getType(), block.getId());
@@ -137,7 +152,7 @@ public class NotionUtil {
      * @return Markdown formatted string
      * @throws IllegalArgumentException if mdBlocks is null
      */
-    public static String generateMarkdown(List<MdBlocks> mdBlocks) {
+    public static String generateMarkdownString(List<MdBlocks> mdBlocks) {
         StringBuilder markdown = new StringBuilder();
         for (MdBlocks block : mdBlocks) {
             markdown.append(block.getContent()).append("\n");
