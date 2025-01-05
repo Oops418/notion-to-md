@@ -1,8 +1,8 @@
-package com.adaptor.notion.utils;
+package adaptor.notion.utils;
 
-import com.adaptor.notion.behavior.EnumBehaviorManager;
-import com.adaptor.notion.domain.MdBlocks;
-import com.adaptor.notion.domain.SerialNumberedListBlock;
+import adaptor.notion.behavior.EnumBehaviorManager;
+import adaptor.notion.domain.MdBlocks;
+import adaptor.notion.domain.SerialNumberedListBlock;
 
 import lombok.extern.slf4j.Slf4j;
 import notion.api.v1.NotionClient;
@@ -31,7 +31,7 @@ public class NotionUtil {
      * @return List of converted markdown blocks
      * @throws IllegalArgumentException if notionBlocks is null
      */
-    public static List<MdBlocks> notionBlocksToMdBlocks(List<Block> notionBlocks, Map<String, PageProperty> pageInfo) {
+    public static List<MdBlocks> notionPageToMdBlocks(List<Block> notionBlocks, Map<String, PageProperty> pageInfo) {
         if (notionBlocks == null) {
             log.error("Notion blocks cannot be null");
             throw new IllegalArgumentException("Notion blocks cannot be null");
@@ -154,10 +154,18 @@ public class NotionUtil {
      */
     public static String generateMarkdownString(List<MdBlocks> mdBlocks) {
         StringBuilder markdown = new StringBuilder();
-        for (MdBlocks block : mdBlocks) {
-            markdown.append(block.getContent()).append("\n");
+        for (int i = 0; i < mdBlocks.size() ; i++) {
+            if (((i+1) != mdBlocks.size()) &&
+                    ((mdBlocks.get(i).getType().equals("bulleted_list_item") && mdBlocks.get(i + 1).getType().equals("bulleted_list_item")) ||
+                    (mdBlocks.get(i).getType().equals("numbered_list_item") && mdBlocks.get(i + 1).getType().equals("numbered_list_item")))) {
+                markdown.append(mdBlocks.get(i).getContent()).append("\n");
+                continue;
+            }
+            markdown.append(mdBlocks.get(i).getContent()).append("\n");
             markdown.append("\n");
         }
+
+
         return markdown.toString();
     }
 

@@ -1,17 +1,21 @@
-package com.adaptor.notion;
+package adaptor.notion;
 
-import com.adaptor.notion.domain.MdBlocks;
-import com.adaptor.notion.utils.NotionClientWrapper;
-import com.adaptor.notion.utils.NotionLoggerWrapper;
-import com.adaptor.notion.utils.NotionUtil;
+import adaptor.notion.domain.MdBlocks;
+import adaptor.notion.utils.NotionClientWrapper;
+import adaptor.notion.utils.NotionLoggerWrapper;
+import adaptor.notion.utils.NotionUtil;
+import lombok.extern.slf4j.Slf4j;
 import notion.api.v1.model.blocks.Block;
+import notion.api.v1.model.pages.PageProperty;
 
 import java.io.Closeable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Converts Notion pages to Markdown format
  */
+@Slf4j
 public class MarkdownConverter implements Closeable {
     private static volatile MarkdownConverter instance;
     private final NotionClientWrapper clientWrapper;
@@ -55,11 +59,12 @@ public class MarkdownConverter implements Closeable {
      */
     public List<MdBlocks> pageToMarkdownBlocks(String pageId) {
         if (pageId == null || pageId.trim().isEmpty()) {
+            log.error("Page ID cannot be null or empty");
             throw new IllegalArgumentException("Page ID cannot be null or empty");
         }
-
         List<Block> notionBlocks = NotionUtil.getNotionBlocks(pageId, clientWrapper.getClient());
-        return NotionUtil.notionBlocksToMdBlocks(notionBlocks);
+        Map<String, PageProperty> pageInfo = NotionUtil.getNotionPageInfo(pageId, clientWrapper.getClient());
+        return NotionUtil.notionPageToMdBlocks(notionBlocks, pageInfo);
     }
 
     /**
@@ -70,10 +75,10 @@ public class MarkdownConverter implements Closeable {
      */
     public String toMarkdownString(List<MdBlocks> mdBlocks) {
         if (mdBlocks == null) {
+            log.error("MdBlocks cannot be null");
             throw new IllegalArgumentException("MdBlocks cannot be null");
         }
-
-        return NotionUtil.generateMarkdown(mdBlocks);
+        return NotionUtil.generateMarkdownString(mdBlocks);
     }
 
     @Override
