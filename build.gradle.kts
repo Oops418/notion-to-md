@@ -1,26 +1,40 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     id("java-library")
     id("maven-publish")
+    id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
-group = "com.github.oops404error"
-version = "1.0-SNAPSHOT"
-
-java {
-//    withJavadocJar()
-    withSourcesJar()
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("libraryProject") {
-            groupId = "com.github.oops404error"
-            artifactId = "notion-to-md"
-            version = "1.0-SNAPSHOT"
-
-            from(components["java"])
+mavenPublishing {
+    coordinates("io.github.oops418", "notion-to-md", "0.0.1-SNAPSHOT")
+    pom {
+        name.set("notion-to-md")
+        description.set("A Java library for converting Notion content to Markdown")
+        inceptionYear.set("2025")
+        url.set("https://github.com/Oops418/notion-to-md")
+        licenses {
+            license {
+                name.set("The MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+            }
+        }
+        developers {
+            developer {
+                id.set("Oops418")
+                name.set("Oops418")
+                url.set("https://github.com/Oops418")
+            }
+        }
+        scm {
+            url.set("https://github.com/Oops418/notion-to-md")
+            connection.set("scm:git:git://github.com/Oops418/notion-to-md.git")
+            developerConnection.set("scm:git:ssh://git@github.com/Oops418/notion-to-md.git")
         }
     }
+
+    publishToMavenCentral(SonatypeHost.DEFAULT)
+    signAllPublications()
 }
 
 repositories {
