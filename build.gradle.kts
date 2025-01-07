@@ -7,7 +7,7 @@ plugins {
 }
 
 mavenPublishing {
-    coordinates("io.github.oops418", "notion-to-md", "0.0.1-SNAPSHOT")
+    coordinates("io.github.oops418", "notion-to-md", "1.0.0")
     pom {
         name.set("notion-to-md")
         description.set("A Java library for converting Notion content to Markdown")
@@ -33,7 +33,7 @@ mavenPublishing {
         }
     }
 
-    publishToMavenCentral(SonatypeHost.DEFAULT)
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 }
 
