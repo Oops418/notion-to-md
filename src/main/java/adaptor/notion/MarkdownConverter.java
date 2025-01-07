@@ -1,13 +1,13 @@
 package adaptor.notion;
 
 import adaptor.notion.domain.MdBlocks;
+import adaptor.notion.log.LoggerFactoryWrapper;
 import adaptor.notion.utils.NotionClientWrapper;
-import adaptor.notion.utils.NotionLoggerWrapper;
+import adaptor.notion.log.NotionLoggerWrapper;
 import adaptor.notion.utils.NotionUtil;
-import lombok.extern.slf4j.Slf4j;
 import notion.api.v1.model.blocks.Block;
 import notion.api.v1.model.pages.PageProperty;
-
+import org.slf4j.Logger;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +15,9 @@ import java.util.Map;
 /**
  * Converts Notion pages to Markdown format
  */
-@Slf4j
+
 public class MarkdownConverter implements Closeable {
+    private static final Logger log = LoggerFactoryWrapper.getLogger(MarkdownConverter.class);
     private static volatile MarkdownConverter instance;
     private final NotionClientWrapper clientWrapper;
 

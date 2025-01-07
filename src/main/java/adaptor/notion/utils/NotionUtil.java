@@ -4,7 +4,7 @@ import adaptor.notion.behavior.EnumBehaviorManager;
 import adaptor.notion.domain.MdBlocks;
 import adaptor.notion.domain.SerialNumberedListBlock;
 
-import lombok.extern.slf4j.Slf4j;
+import adaptor.notion.log.LoggerFactoryWrapper;
 import notion.api.v1.NotionClient;
 import notion.api.v1.model.blocks.Block;
 import notion.api.v1.model.blocks.BlockType;
@@ -12,6 +12,7 @@ import notion.api.v1.model.blocks.NumberedListItemBlock;
 import notion.api.v1.model.pages.Page;
 import notion.api.v1.model.pages.PageProperty;
 import notion.api.v1.model.pages.PageProperty.RichText;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +24,9 @@ import java.util.Optional;
  * Provides functionality to parse Notion blocks, extract text content,
  * and generate markdown representation.
  */
-@Slf4j
 public class NotionUtil {
+    private static final Logger log = LoggerFactoryWrapper.getLogger(NotionUtil.class);
+
     /**
      * Converts a list of Notion blocks and page properties to markdown blocks.
      *
@@ -53,7 +55,7 @@ public class NotionUtil {
             String id = block.getId();
             String type = block.getType().toString();
             String content = markdownParser(block);
-            
+
             if (content != null && !content.isEmpty()) {
                 mdBlocks.add(new MdBlocks(id, type, content, new ArrayList<>(0)));
                 log.trace("Added block - Type: {}, ID: {}", type, id);
@@ -80,20 +82,20 @@ public class NotionUtil {
             throw new IllegalArgumentException("Block ID cannot be null or empty");
         }
         log.debug("Block ID validation passed");
-    
+
         if (notionClient == null) {
             log.error("NotionClient cannot be null");
             throw new IllegalArgumentException("NotionClient cannot be null");
         }
         log.debug("NotionClient validation passed");
-    
+
         List<Block> results;
         try {
             results = notionClient.retrieveBlockChildren(blockId, null, null).getResults();
             log.debug("Raw blocks retrieved: {}", results);
             modifyNumberedList(results);
             log.debug("Numbered list modification completed");
-            
+
         } catch (Exception e) {
             log.error("Failed to retrieve blocks for blockId: {}", blockId, e);
             throw e;
@@ -127,7 +129,7 @@ public class NotionUtil {
             Page page = notionClient.retrievePage(pageId, null);
             Map<String, PageProperty> properties = page.getProperties();
             log.debug("Page properties: {}", properties.keySet());
-            
+
             return properties;
         } catch (Exception e) {
             log.error("Failed to retrieve page info for pageId: {}", pageId, e);
@@ -185,7 +187,7 @@ public class NotionUtil {
      */
     public static String richTextParser(List<RichText> richTexts) {
         log.debug("Starting rich text parsing for {} elements", richTexts != null ? richTexts.size() : 0);
-    
+
         if (richTexts == null) {
             log.warn("Rich text list is null");
             return "";
@@ -243,10 +245,10 @@ public class NotionUtil {
             MdBlocks currentBlock = mdBlocks.get(i);
             boolean isLastBlock = (i + 1 == mdBlocks.size());
             boolean isConsecutiveListItem = !isLastBlock && isConsecutiveListItems(currentBlock, mdBlocks.get(i + 1));
-            
+
             markdown.append(currentBlock.getContent())
                    .append("\n");
-            
+
             if (!isConsecutiveListItem) {
                 markdown.append("\n");
             }
@@ -282,7 +284,7 @@ public class NotionUtil {
             log.warn("Null blocks list provided to modifyNumberedList");
             throw new IllegalArgumentException("blocks cannot be null");
         }
-        
+
         int serialNumber = 1;
         for (int i = 0; i < blocks.size(); i++) {
             Block block = blocks.get(i);
@@ -292,7 +294,7 @@ public class NotionUtil {
                     throw new IllegalStateException("Block marked as NumberedListItem but is not of correct type");
                 }
                 SerialNumberedListBlock serialBlock = new SerialNumberedListBlock(
-                    (NumberedListItemBlock) block, 
+                    (NumberedListItemBlock) block,
                     serialNumber++
                 );
                 blocks.set(i, serialBlock);
@@ -315,7 +317,7 @@ public class NotionUtil {
             log.warn("Null block provided to getCodeLanguage");
             throw new IllegalArgumentException("block cannot be null");
         }
-        
+
         if (BlockType.Code.equals(block.getType())) {
             return Optional.ofNullable(block.asCode().getCode().getLanguage());
         }

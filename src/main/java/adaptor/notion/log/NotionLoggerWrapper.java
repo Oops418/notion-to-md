@@ -1,12 +1,12 @@
-package adaptor.notion.utils;
+package adaptor.notion.log;
 
-import lombok.extern.slf4j.Slf4j;
 import notion.api.v1.logging.NotionLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
-@Slf4j
 public class NotionLoggerWrapper implements NotionLogger {
+    private static final Logger log = LoggerFactoryWrapper.getLogger(NotionLoggerWrapper.class);
 
     @Override
     public boolean isDebugEnabled() {
