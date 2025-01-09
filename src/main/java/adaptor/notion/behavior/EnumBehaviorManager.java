@@ -31,7 +31,7 @@ public class EnumBehaviorManager {
         BehaviorStrategy strategy = behaviorMap.get(type);
         if (strategy != null) {
             return strategy.format(block);
-        }else {
+        } else {
             throw new IllegalArgumentException("No behavior found for element: " + type);
         }
     }
